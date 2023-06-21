@@ -34,11 +34,15 @@ void handle_movement(player_t *player);
 void spawn_obstacles(obstacle_t *obstacles, int *score);
 void draw_obstacles(obstacle_t *obstacles);
 void move_obstacles(obstacle_t *obstacles);
-void reset_the_game(int *score);
+void reset_the_game(int *score, int *game_started);
 int player_has_colided(obstacle_t *obstacles, player_t *player);
 void display_score(int score, score_text_t *score_text);
+void display_main_menu_screen();
+int should_start_game();
+int should_quit_game();
 int main(int argc, char **argv){
     int score = -1;
+    int game_started = 0;
     InitWindow(WIDTH, HEIGHT, TITLE);
     SetTargetFPS(60);
     Rectangle terrain = {.x=0,.y=550,.height=50,.width=600};
@@ -48,18 +52,31 @@ int main(int argc, char **argv){
     score_text_t score_text = {.text_position.x = 0,.text_position.y=0,.font_size=20,.color=RED, .text="asdsa"};
         while (!WindowShouldClose())
         {
-            move_obstacles(obsatcles);
-            jump_physics(&player);
-            handle_movement(&player);
-            spawn_obstacles(obsatcles, &score);
-            if(player_has_colided(obsatcles, &player)) reset_the_game(&score);
+            if(should_start_game()) game_started = 1;
+                 if(game_started){
+                    move_obstacles(obsatcles);
+                    jump_physics(&player);
+                    handle_movement(&player);
+                    spawn_obstacles(obsatcles, &score);
+                    if(player_has_colided(obsatcles, &player)) reset_the_game(&score, &game_started);
+            } else{
+                if(should_quit_game()){
+                break;
+            }
+            }
+            
+
             BeginDrawing();
             {
-                ClearBackground(WHITE);
-                DrawRectangleRec(terrain, GREEN);
-                DrawRectangleV(player.player_position, player.player_size, player.color);
-                draw_obstacles(obsatcles);
-                display_score(score, &score_text);
+                if(!game_started){
+                    display_main_menu_screen();
+                } else {
+                    ClearBackground(WHITE);
+                    DrawRectangleRec(terrain, GREEN);
+                    DrawRectangleV(player.player_position, player.player_size, player.color);
+                    draw_obstacles(obsatcles);
+                    display_score(score, &score_text);
+                }
             }
             EndDrawing();
         }
@@ -126,12 +143,36 @@ int player_has_colided(obstacle_t *obstacles, player_t *player){
     }
     return 0;
 }
-void reset_the_game(int *score){
+void reset_the_game(int *score, int *game_started){
     *score = 0;
-    printf("HIT!\n");
+    *game_started = 0;
+    // display_main_menu_screen();
+    // printf("HIT!\n");
+
 }
 void display_score(int score, score_text_t *score_text){
     sprintf(score_text->text, "Current score:%d", score);
     DrawText(score_text->text, score_text->text_position.x, score_text->text_position.y, 
     score_text->font_size, score_text->color);
+}
+void display_main_menu_screen(){
+    ClearBackground(WHITE);
+    DrawRectangle(200,200,200,100,GRAY);
+    DrawText("Play", 275,240,20,RED);
+    DrawRectangle(200,350,200,100,GRAY);
+    DrawText("Exit", 275,390,20,RED);
+}
+int should_start_game(){
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (GetMouseX() > 200 && GetMouseX() < 400) &&
+        (GetMouseY() > 200 && GetMouseY() < 300)){
+        return 1;
+    }
+    return 0;
+}
+int should_quit_game(){
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (GetMouseX() > 200 && GetMouseX() < 400) && 
+        (GetMouseY() > 350 && GetMouseY() < 450)){
+        return 1;
+    }
+    return 0;
 }
